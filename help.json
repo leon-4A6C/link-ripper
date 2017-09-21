@@ -1,0 +1,6 @@
+{
+    "[url]   ": "the url to rip from, default: https://www.startpagina.nl/",
+    "--help, -h": "shows this help menu thingy",
+    "--version, -v": "shows the version number",
+    "--save, -s": "specifies which file to save to, default data.json"
+}

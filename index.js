@@ -1,6 +1,8 @@
 const fetch = require("node-fetch")
 const cheerio = require("cheerio")
 const fs = require("fs")
+const process = require("process")
+const argv = require('minimist')(process.argv.slice(2))
 
 const headerExeptions = require("./h2Exeptions")
 const urlExeptions = require("./urlExeptions")
@@ -9,9 +11,75 @@ const removeText = require("./removeFromText")
 const output = {}
 const links = []
 
-const amountNeeded = 100;
+const amountNeeded = 100
 
-fetch("https://www.startpagina.nl/")
+let url = "https://www.startpagina.nl/"
+let saveFile = __dirname + "data.json"
+// handles all the options
+
+for (let opt in argv) {
+  if (argv.hasOwnProperty(opt)) {
+    const arg = argv[opt];
+    
+
+    switch (opt) {
+
+      case "_":
+        arg.forEach((x, i) => {
+          if(x.search(/[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/=]*)/gi) != -1) {
+            // is url
+            url = x;
+          } else {
+            const p = require("./package")        
+            console.log("not a valid url or something weird happend.\r\nreport this on github: ", p.repository+"/issues/new")
+            process.exit()
+          }
+        })
+        break;
+
+      case "h":
+      case "help":
+        const options = require("./help")
+      
+        console.log("Usage: node index [url] [arguments]\r\n")
+        console.log("Options: ")
+        
+        for (let option in options) {
+          if (options.hasOwnProperty(option)) {
+            const desc = options[option]
+            console.log(`\t${option}\t\t${desc}`)
+          }
+        }
+      
+        console.log("")
+        process.exit()
+        break;
+
+      case "v":
+      case "version":
+        const p = require("./package")
+        console.log(p.name + " version: " + p.version)
+        process.exit()
+        break;
+
+      case "s":
+      case "save":
+        saveFile = arg
+        break;
+      
+      
+
+      default:
+        break;
+    }
+
+
+  }
+}
+
+console.log("ripping: " + url)
+
+fetch(url)
   .then(res => res.text())
   .then(html => {
     const $ = cheerio.load(html);
@@ -48,9 +116,9 @@ fetch("https://www.startpagina.nl/")
         }
       }
     })
-    console.log(output)
-    console.log("headers: " + Object.keys(output).length)
-    fs.writeFile("./data.json", JSON.stringify(output), (err) => {
+    // console.log(output)
+    // console.log("headers: " + Object.keys(output).length)
+    fs.writeFile(saveFile, JSON.stringify(output), (err) => {
       if(err)
         console.log(err)
     })
