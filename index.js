@@ -8,19 +8,17 @@ const headerExeptions = require("./h2Exeptions")
 const urlExeptions = require("./urlExeptions")
 const removeText = require("./removeFromText")
 
-const output = {}
-const links = []
-
-const amountNeeded = 100
-
+// default settings
+let amountNeeded = 100
 let url = "https://www.startpagina.nl/"
-let saveFile = __dirname + "data.json"
-// handles all the options
+let saveFile = __dirname + "/data.json"
+let minLinks = 3;
+let maxLinks = 7;
 
+// handles all the options
 for (let opt in argv) {
   if (argv.hasOwnProperty(opt)) {
     const arg = argv[opt];
-    
 
     switch (opt) {
 
@@ -67,7 +65,18 @@ for (let opt in argv) {
         saveFile = arg
         break;
       
+      case "l":
+      case "limit":
+        amountNeeded = arg
+        break;
+
+      case "min-links":
+        minLinks = arg
+        break;
       
+      case "min-links":
+        maxLinks = arg
+        break;
 
       default:
         break;
@@ -78,6 +87,9 @@ for (let opt in argv) {
 }
 
 console.log("ripping: " + url)
+
+const output = {}
+const links = []
 
 fetch(url)
   .then(res => res.text())
@@ -99,7 +111,7 @@ fetch(url)
           if (url.search(/[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/=]*)/gi) != -1 &&
               !urlExeptions.some(x => url.toLowerCase().indexOf(x) > -1) &&
               links.indexOf(baseUrl) == -1 &&
-              output[text].length <= 7) {
+              output[text].length <= maxLinks) {
 
             output[text].push({
               text: cleanText(elem.text()),
@@ -111,7 +123,7 @@ fetch(url)
           }
 
         })
-        if(output[text].length < 3) {
+        if(output[text].length < minLinks) {
           delete output[text]
         }
       }
@@ -119,8 +131,11 @@ fetch(url)
     // console.log(output)
     // console.log("headers: " + Object.keys(output).length)
     fs.writeFile(saveFile, JSON.stringify(output), (err) => {
-      if(err)
-        console.log(err)
+      if(err) {
+        console.log(err)        
+      } else {
+        console.log("done!\r\nwritten to " + saveFile);
+      }
     })
   })
 
