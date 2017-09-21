@@ -95,39 +95,53 @@ fetch(url)
   .then(res => res.text())
   .then(html => {
     const $ = cheerio.load(html);
-    $(".column .block").each((i, elem) => {
-      const text = $(elem).find("h2").text().trim();
-      if(!headerExeptions.some(x => text.toLowerCase().indexOf(x) > -1) &&
-          Object.keys(output).length < amountNeeded) {
-        output[text] = [];   
-        $(elem).find("div ul li a").each((i, elem) => {
-          elem = $(elem)
-          const url = cleanUrl(elem.attr("href"))
-          let baseUrl = ""
-          url.replace(/([a-z]+:\/\/)([a-z\d][a-z\d-]*(\:[a-z\d][a-z\d-]*)*@)?([a-z\d][a-z\d-]*(\.[a-z\d][a-z\d-]*)*)/g, (x) => {
-            baseUrl = x;
-          })
+    // $(".column .block").each((i, elem) => {
+    //   const text = $(elem).find("h2").text().trim();
+    //   if(!headerExeptions.some(x => text.toLowerCase().indexOf(x) > -1) &&
+    //       Object.keys(output).length < amountNeeded) {
+    //     output[text] = [];   
+    //     $(elem).find("div ul li a").each((i, elem) => {
+    //       elem = $(elem)
+    //       const url = cleanUrl(elem.attr("href"))
+    //       let baseUrl = ""
+    //       url.replace(/([a-z]+:\/\/)([a-z\d][a-z\d-]*(\:[a-z\d][a-z\d-]*)*@)?([a-z\d][a-z\d-]*(\.[a-z\d][a-z\d-]*)*)/g, (x) => {
+    //         baseUrl = x;
+    //       })
 
-          if (url.search(/[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/=]*)/gi) != -1 &&
-              !urlExeptions.some(x => url.toLowerCase().indexOf(x) > -1) &&
-              links.indexOf(baseUrl) == -1 &&
-              output[text].length <= maxLinks) {
+    //       if (url.search(/[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/=]*)/gi) != -1 &&
+    //           !urlExeptions.some(x => url.toLowerCase().indexOf(x) > -1) &&
+    //           links.indexOf(baseUrl) == -1 &&
+    //           output[text].length <= maxLinks) {
 
-            output[text].push({
-              text: cleanText(elem.text()),
-              url: url,
-            });
+    //         output[text].push({
+    //           text: cleanText(elem.text()),
+    //           url: url,
+    //         });
 
-            links.push(baseUrl);
+    //         links.push(baseUrl);
             
-          }
+    //       }
 
-        })
-        if(output[text].length < minLinks) {
-          delete output[text]
+    //     })
+    //     if(output[text].length < minLinks) {
+    //       delete output[text]
+    //     }
+    //   }
+    // })
+
+    $("ul li a").each((i, elem) => {
+      elem = $(elem);
+      console.log(getH2(elem).text().trim())
+      function getH2(e) {
+        const p = e.parent()
+        if(p.find("h2").length <= 0) {
+          return getH2(p);
+        } else {
+          return p.find("h2");
         }
       }
     })
+
     // console.log(output)
     // console.log("headers: " + Object.keys(output).length)
     fs.writeFile(saveFile, JSON.stringify(output), (err) => {
