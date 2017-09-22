@@ -85,6 +85,10 @@ for (let opt in argv) {
         break
 
       default:
+        console.log(
+          "weird option, make sure you don't hove a typo or something, also checkout\r\nnode index --help"
+        )
+        process.exit()
         break
     }
   }
