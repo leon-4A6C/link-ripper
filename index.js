@@ -1,92 +1,96 @@
-const fetch = require("node-fetch")
-const cheerio = require("cheerio")
-const fs = require("fs")
-const process = require("process")
+const fetch = require('node-fetch')
+const cheerio = require('cheerio')
+const fs = require('fs')
+const process = require('process')
 const argv = require('minimist')(process.argv.slice(2))
 
-const headerExeptions = require("./h2Exeptions")
-const urlExeptions = require("./urlExeptions")
-const removeText = require("./removeFromText")
+const headerExeptions = require('./h2Exeptions')
+const urlExeptions = require('./urlExeptions')
+const removeText = require('./removeFromText')
 
 // default settings
 let amountNeeded = 100
-let url = "https://www.startpagina.nl/"
-let saveFile = __dirname + "/data.json"
-let minLinks = 3;
-let maxLinks = 7;
+let url = 'https://www.startpagina.nl/'
+let saveFile = __dirname + '/data.json'
+let minLinks = 3
+let maxLinks = 7
 
 // handles all the options
 for (let opt in argv) {
   if (argv.hasOwnProperty(opt)) {
-    const arg = argv[opt];
+    const arg = argv[opt]
 
     switch (opt) {
-
-      case "_":
+      case '_':
         arg.forEach((x, i) => {
-          if(x.search(/[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/=]*)/gi) != -1) {
+          if (
+            x.search(
+              /[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/=]*)/gi
+            ) != -1
+          ) {
             // is url
-            url = x;
+            url = x
           } else {
-            const p = require("./package")        
-            console.log("not a valid url or something weird happend.\r\nreport this on github: ", p.repository+"/issues/new")
+            const p = require('./package')
+            console.log(
+              'not a valid url or something weird happend.\r\nreport this on github: ',
+              p.repository + '/issues/new'
+            )
             process.exit()
           }
         })
-        break;
+        break
 
-      case "h":
-      case "help":
-        const options = require("./help")
-      
-        console.log("Usage: node index [url] [arguments]\r\n")
-        console.log("Options: ")
-        
+      case 'h':
+      case 'help':
+        const options = require('./help')
+
+        console.log('Usage: node index [url] [arguments]\r\n')
+        console.log('Options: ')
+
         for (let option in options) {
           if (options.hasOwnProperty(option)) {
             const desc = options[option]
             console.log(`\t${option}\t\t${desc}`)
           }
         }
-      
-        console.log("")
-        process.exit()
-        break;
 
-      case "v":
-      case "version":
-        const p = require("./package")
-        console.log(p.name + " version: " + p.version)
+        console.log('')
         process.exit()
-        break;
+        break
 
-      case "s":
-      case "save":
+      case 'v':
+      case 'version':
+        const p = require('./package')
+        console.log(p.name + ' version: ' + p.version)
+        process.exit()
+        break
+
+      case 's':
+      case 'save':
         saveFile = arg
-        break;
-      
-      case "l":
-      case "limit":
-        amountNeeded = arg
-        break;
+        break
 
-      case "min-links":
+      case 'l':
+      case 'limit':
+        amountNeeded = arg
+        break
+
+      case 'min-links':
         minLinks = arg
-        break;
-      
-      case "min-links":
+        break
+
+      case 'max-links':
         maxLinks = arg
-        break;
+        break
 
       default:
-        break;
+        break
     }
-
-
   }
 }
 
-console.log("ripping: " + url)
+console.log('ripping: ' + url)
 
 const output = {}
 const links = []
@@ -94,12 +98,12 @@ const links = []
 fetch(url)
   .then(res => res.text())
   .then(html => {
-    const $ = cheerio.load(html);
+    const $ = cheerio.load(html)
     // $(".column .block").each((i, elem) => {
     //   const text = $(elem).find("h2").text().trim();
     //   if(!headerExeptions.some(x => text.toLowerCase().indexOf(x) > -1) &&
     //       Object.keys(output).length < amountNeeded) {
-    //     output[text] = [];   
+    //     output[text] = [];
     //     $(elem).find("div ul li a").each((i, elem) => {
     //       elem = $(elem)
     //       const url = cleanUrl(elem.attr("href"))
@@ -119,7 +123,7 @@ fetch(url)
     //         });
 
     //         links.push(baseUrl);
-            
+
     //       }
 
     //     })
@@ -129,40 +133,42 @@ fetch(url)
     //   }
     // })
 
-    $("ul li a").each((i, elem) => {
-      elem = $(elem);
-      console.log(getH2(elem).text().trim())
+    $('ul li a').each((i, elem) => {
+      elem = $(elem)
+      console.log(
+        getH2(elem)
+          .text()
+          .trim()
+      )
       function getH2(e) {
         const p = e.parent()
-        if(p.find("h2").length <= 0) {
-          return getH2(p);
+        if (p.find('h2').length <= 0) {
+          return getH2(p)
         } else {
-          return p.find("h2");
+          return p.find('h2')
         }
       }
     })
 
     // console.log(output)
     // console.log("headers: " + Object.keys(output).length)
-    fs.writeFile(saveFile, JSON.stringify(output), (err) => {
-      if(err) {
-        console.log(err)        
+    fs.writeFile(saveFile, JSON.stringify(output), err => {
+      if (err) {
+        console.log(err)
       } else {
-        console.log("done!\r\nwritten to " + saveFile);
+        console.log('done!\r\nwritten to ' + saveFile)
       }
     })
   })
 
 function cleanUrl(url) {
-  return url.replace(/\?.*/, "");
+  return url.replace(/\?.*/, '')
 }
 
 function cleanText(str) {
   let output = str
-  removeText.forEach((x) => {
-    output = output
-      .replace(x, "")
-      .trim()
+  removeText.forEach(x => {
+    output = output.replace(x, '').trim()
   })
   return output
 }
