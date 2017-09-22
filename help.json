@@ -1,9 +1,13 @@
 {
-    "[url]   ": "the url to rip from, default: https://www.startpagina.nl/",
-    "--help, -h": "shows this help menu thingy",
-    "--version, -v": "shows the version number",
-    "--save, -s": "specifies which file to save to, default data.json",
-    "--limit, -l": "limit the amount of headers you get, default 100(too much in most cases)",
-    "--min-links": "sets the minimum amount of links needed for one header, default 3",
-    "--max-links": "sets the maximum amount of links needed for one header, default 7"
+  "[url]   ": "the url to rip from, default: https://www.startpagina.nl/",
+  "--help, -h": "shows this help menu thingy",
+  "--version, -v": "shows the version number",
+  "--save, -s": "specifies which file to save to, default data.json",
+  "--limit, -l":
+    "limit the amount of headers you get, default 100(too much in most cases)",
+  "--min-links":
+    "sets the minimum amount of links needed for one header, default 3",
+  "--max-links":
+    "sets the maximum amount of links needed for one header, default 7",
+  "--verbose, -V": "run the program in verbose mode (you see what it is doing)"
 }

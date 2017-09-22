@@ -14,6 +14,7 @@ let url = 'https://www.startpagina.nl/'
 let saveFile = __dirname + '/data.json'
 let minLinks = 3
 let maxLinks = 7
+let verbose = false
 
 // handles all the options
 for (let opt in argv) {
@@ -84,6 +85,11 @@ for (let opt in argv) {
         maxLinks = arg
         break
 
+      case 'V':
+      case 'verbose':
+        verbose = true
+        break
+
       default:
         console.log(
           "weird option, make sure you don't hove a typo or something, also checkout\r\nnode index --help"
@@ -102,51 +108,89 @@ const links = []
 fetch(url)
   .then(res => res.text())
   .then(html => {
+    verbose && console.log('loaded html')
     const $ = cheerio.load(html)
-    $('.column .block').each((i, elem) => {
-      const text = $(elem)
-        .find('h2')
+
+    $('ul li a').each((i, elem) => {
+      elem = $(elem)
+      const text = getH2(elem)
         .text()
         .trim()
+      const outputKeys = Object.keys(output)
+
+      // check previous thing for too few link
       if (
-        !headerExeptions.some(x => text.toLowerCase().indexOf(x) > -1) &&
-        Object.keys(output).length < amountNeeded
+        outputKeys.length > 0 &&
+        outputKeys[outputKeys.length - 1] != text &&
+        output[outputKeys[outputKeys.length - 1]].length < minLinks
       ) {
-        output[text] = []
-        $(elem)
-          .find('div ul li a')
-          .each((i, elem) => {
-            elem = $(elem)
-            const url = cleanUrl(elem.attr('href'))
-            let baseUrl = ''
-            url.replace(
-              /([a-z]+:\/\/)([a-z\d][a-z\d-]*(\:[a-z\d][a-z\d-]*)*@)?([a-z\d][a-z\d-]*(\.[a-z\d][a-z\d-]*)*)/g,
-              x => {
-                baseUrl = x
-              }
-            )
+        verbose &&
+          console.log(
+            'removed: ',
+            outputKeys[outputKeys.length - 1] + ':',
+            output[outputKeys[outputKeys.length - 1]]
+          )
+        delete output[outputKeys[outputKeys.length - 1]]
+      }
 
-            if (
-              url.search(
-                /[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/=]*)/gi
-              ) != -1 &&
-              !urlExeptions.some(x => url.toLowerCase().indexOf(x) > -1) &&
-              links.indexOf(baseUrl) == -1 &&
-              output[text].length <= maxLinks
-            ) {
-              output[text].push({
-                text: cleanText(elem.text()),
-                url: url
-              })
+      if (
+        !headerExeptions.some(
+          x => text.toLowerCase().indexOf(x.toLowerCase()) > -1
+        ) &&
+        outputKeys.length <= amountNeeded
+      ) {
+        if (!output[text]) {
+          output[text] = []
+          verbose && console.log('added header: ', text)
+        }
+        verbose && console.log('started parsing: ', text, elem.text())
 
-              links.push(baseUrl)
-            }
+        const url = cleanUrl(elem.attr('href'))
+        const anchorText = cleanText(elem.text())
+        if (
+          url.search(
+            /[(http(s)?):\/\/(www\.)?a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/=]*)/gi
+          ) != -1 &&
+          !urlExeptions.some(
+            x => url.toLowerCase().indexOf(x.toLowerCase()) > -1
+          ) &&
+          output[text].length <= maxLinks &&
+          links.indexOf(anchorText) === -1
+        ) {
+          output[text].push({
+            text: anchorText,
+            url
           })
-        if (output[text].length < minLinks) {
-          delete output[text]
+          // add it to a filter list thingy
+          links.push(anchorText)
+          verbose &&
+            output[text].length > 0 &&
+            console.log('added link: ', output[text][output[text].length - 1])
+        } else {
+          verbose && console.log("didn't pass")
+        }
+      }
+
+      // finds the nearest h2 and has a max of 3 times before stopping the search, prevents the nav bar from facking everything up
+      function getH2(e, tries = 0) {
+        const p = e.parent()
+        if (p.find('h2').length === 0 && tries < 3) {
+          return getH2(p, ++tries)
+        } else {
+          return p.find('h2')
         }
       }
     })
+
+    const outputKeys = Object.keys(output)
+    // check previous thing for too few link
+    if (
+      outputKeys.length > 0 &&
+      output[outputKeys[outputKeys.length - 1]].length < minLinks
+    ) {
+      delete output[outputKeys[outputKeys.length - 1]]
+    }
+
     // console.log(output)
     // console.log("headers: " + Object.keys(output).length)
     fs.writeFile(saveFile, JSON.stringify(output), err => {
