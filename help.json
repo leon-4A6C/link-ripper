@@ -8,5 +8,6 @@
   "--min-links":
     "sets the minimum amount of links needed for one header, default 3",
   "--max-links":
-    "sets the maximum amount of links needed for one header, default 7"
+    "sets the maximum amount of links needed for one header, default 7",
+  "--verbose, -V": "run the program in verbose mode (you see what it is doing)"
 }

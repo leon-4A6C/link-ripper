@@ -14,6 +14,7 @@ let url = 'https://www.startpagina.nl/'
 let saveFile = __dirname + '/data.json'
 let minLinks = 3
 let maxLinks = 7
+let verbose = false
 
 // handles all the options
 for (let opt in argv) {
@@ -84,6 +85,11 @@ for (let opt in argv) {
         maxLinks = arg
         break
 
+      case 'V':
+      case 'verbose':
+        verbose = true
+        break
+
       default:
         console.log(
           "weird option, make sure you don't hove a typo or something, also checkout\r\nnode index --help"
@@ -102,6 +108,7 @@ const links = []
 fetch(url)
   .then(res => res.text())
   .then(html => {
+    verbose && console.log('loaded html')
     const $ = cheerio.load(html)
 
     $('ul li a').each((i, elem) => {
@@ -117,6 +124,12 @@ fetch(url)
         outputKeys[outputKeys.length - 1] != text &&
         output[outputKeys[outputKeys.length - 1]].length < minLinks
       ) {
+        verbose &&
+          console.log(
+            'removed: ',
+            outputKeys[outputKeys.length - 1] + ':',
+            output[outputKeys[outputKeys.length - 1]]
+          )
         delete output[outputKeys[outputKeys.length - 1]]
       }
 
@@ -128,7 +141,9 @@ fetch(url)
       ) {
         if (!output[text]) {
           output[text] = []
+          verbose && console.log('added header: ', text)
         }
+        verbose && console.log('started parsing: ', text, elem.text())
 
         const url = cleanUrl(elem.attr('href'))
         const anchorText = cleanText(elem.text())
@@ -148,10 +163,15 @@ fetch(url)
           })
           // add it to a filter list thingy
           links.push(anchorText)
+          verbose &&
+            output[text].length > 0 &&
+            console.log('added link: ', output[text][output[text].length - 1])
+        } else {
+          verbose && console.log("didn't pass")
         }
       }
 
-      // finds the neirest h2 and has a max of 3 times before stopping the search, prevents the nav bar from facking everything up
+      // finds the nearest h2 and has a max of 3 times before stopping the search, prevents the nav bar from facking everything up
       function getH2(e, tries = 0) {
         const p = e.parent()
         if (p.find('h2').length === 0 && tries < 3) {
