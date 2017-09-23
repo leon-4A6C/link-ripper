@@ -9,5 +9,9 @@
     "sets the minimum amount of links needed for one header, default 3",
   "--max-links":
     "sets the maximum amount of links needed for one header, default 7",
+  "--header, -H":
+    "the header element of a block, default h2, could be h[0-9] or idk a div.header or something. querySelector stuff",
+  "--header-search-depth, -hsd\r\n":
+    "how far/deep to look for the header, default 3",
   "--verbose, -V": "run the program in verbose mode (you see what it is doing)"
 }

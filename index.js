@@ -15,6 +15,8 @@ let saveFile = __dirname + '/data.json'
 let minLinks = 3
 let maxLinks = 7
 let verbose = false
+let headerElement = 'h2'
+let headerSearchDepth = 3
 
 // handles all the options
 for (let opt in argv) {
@@ -90,6 +92,16 @@ for (let opt in argv) {
         verbose = true
         break
 
+      case 'H':
+      case 'header':
+        headerElement = arg
+        break
+
+      case 'hsd':
+      case 'header-search-depth':
+        headerSearchDepth = arg
+        break
+
       default:
         console.log(
           "weird option, make sure you don't hove a typo or something, also checkout\r\nnode index --help"
@@ -113,7 +125,7 @@ fetch(url)
 
     $('ul li a').each((i, elem) => {
       elem = $(elem)
-      const text = getH2(elem)
+      const text = getHeaderElement(elem)
         .text()
         .trim()
       const outputKeys = Object.keys(output)
@@ -172,12 +184,12 @@ fetch(url)
       }
 
       // finds the nearest h2 and has a max of 3 times before stopping the search, prevents the nav bar from facking everything up
-      function getH2(e, tries = 0) {
+      function getHeaderElement(e, tries = 0) {
         const p = e.parent()
-        if (p.find('h2').length === 0 && tries < 3) {
-          return getH2(p, ++tries)
+        if (p.find('h2').length === 0 && tries < headerSearchDepth) {
+          return getHeaderElement(p, ++tries)
         } else {
-          return p.find('h2')
+          return p.find(headerElement)
         }
       }
     })
